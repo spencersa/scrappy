@@ -6,13 +6,14 @@ let stateResults = [];
 const accountSid = '';
 const authToken = '';
 const client = require('twilio')(accountSid, authToken);
-const bigResultSize = 100;
+const bigResultSize = 500;
+const battlegroundStates = ['NV', 'AZ', 'GA', 'NC', 'PA']
 
 (async () => {
     try {
         await main();
         app = express();
-        cron.schedule('*/10 * * * * *', async () => {
+        cron.schedule('*/30 * * * *', async () => {
             await main();
         });
         app.listen(3000);
@@ -51,34 +52,45 @@ async function main() {
 
             let body = "";
 
+            let resultChange = false;
             let bigResult = (stateResult.totalVotes - existingState.totalVotes) > bigResultSize ? true : false;
-
+    
             if (existingState.totalVotes !== stateResult.totalVotes) {
                 fs.appendFileSync('results.txt', `${dateTime} Update in ${existingState.state}` + '\r\n');
+                console.log(`${dateTime} Update in ${existingState.state}` + '\r\n');
                 body += `Update in ${existingState.state}` + '\r\n';
+                resultChange = true;
             }
 
             if (existingState.donVotes !== stateResult.donVotes) {
-                console.log(`Don just gained ${stateResult.donVotes - existingState.donVotes} in ${existingState.state} bringing him to ${(stateResult.donVotes / stateResult.totalVotes) * 100}%`);
-                fs.appendFileSync('results.txt', `Don just gained ${stateResult.donVotes - existingState.donVotes} in ${existingState.state} bringing him to ${(stateResult.donVotes / stateResult.totalVotes) * 100}%` + '\r\n');
-                body += `Don just gained ${stateResult.donVotes - existingState.donVotes} in ${existingState.state} bringing him to ${(stateResult.donVotes / stateResult.totalVotes) * 100}%` + '\r\n';
+                let message = `Don gained ${stateResult.donVotes - existingState.donVotes} in ${existingState.state}` + '\r\n';
+                console.log(message);
+                fs.appendFileSync('results.txt', message);
+                body += message;
                 existingState.donVotes = stateResult.donVotes;
             }
 
             if (existingState.joeVotes !== stateResult.joeVotes) {
-                console.log(`Joe just gained ${stateResult.joeVotes - existingState.joeVotes} in ${existingState.state} bringing him to ${(stateResult.joeVotes / stateResult.totalVotes) * 100}%`);
-                fs.appendFileSync('results.txt', `Joe just gained ${stateResult.joeVotes - existingState.joeVotes} in ${existingState.state} bringing him to ${(stateResult.joeVotes / stateResult.totalVotes) * 100}%` + '\r\n')
-                body += `Joe just gained ${stateResult.joeVotes - existingState.joeVotes} in ${existingState.state} bringing him to ${(stateResult.joeVotes / stateResult.totalVotes) * 100}%` + '\r\n';
+                let message = `Don gained ${stateResult.donVotes - existingState.donVotes} in ${existingState.state}` + '\r\n';
+                console.log(message);
+                fs.appendFileSync('results.txt', message);
+                body += message;
                 existingState.joeVotes = stateResult.joeVotes;
             }
 
-            if ((state === 'NV' ||
-                state === 'AZ' ||
-                state === 'GA' ||
-                state === 'NC' ||
-                state === 'PA') && bigResult) {
+            let donSummaryMessage = `Don: ${(stateResult.donVotes / stateResult.totalVotes) * 100}%` + '\r\n'
+            let joeSummaryMessage = `Joe: ${(stateResult.joeVotes / stateResult.totalVotes) * 100}%` + '\r\n'
+            if (resultChange) {
+                console.log(donSummaryMessage);
+                console.log(joeSummaryMessage);
+                fs.appendFileSync('results.txt', donSummaryMessage);
+                fs.appendFileSync('results.txt', joeSummaryMessage);
+            }
 
+            if (battlegroundStates.includes(state) && bigResult) {
                 if (existingState.totalVotes !== stateResult.totalVotes && bigResult) {
+                    body += donSummaryMessage;
+                    body += joeSummaryMessage;
                     await client.messages
                         .create({
                             body: body,
