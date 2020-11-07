@@ -7,7 +7,7 @@ const accountSid = '';
 const authToken = '';
 const client = require('twilio')(accountSid, authToken);
 const bigResultSize = 500;
-const battlegroundStates = ['NV', 'AZ', 'GA', 'NC', 'PA']
+const battlegroundStates = ["NV", "AZ", "GA", "NC", "PA"];
 
 (async () => {
     try {
