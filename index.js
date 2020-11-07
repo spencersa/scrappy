@@ -71,7 +71,7 @@ async function main() {
             }
 
             if (existingState.joeVotes !== stateResult.joeVotes) {
-                let message = `Don gained ${stateResult.donVotes - existingState.donVotes} in ${existingState.state}` + '\r\n';
+                let message = `Joe gained ${stateResult.joeVotes - existingState.joeVotes} in ${existingState.state}` + '\r\n';
                 console.log(message);
                 fs.appendFileSync('results.txt', message);
                 body += message;
